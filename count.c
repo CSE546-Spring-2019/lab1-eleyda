@@ -19,11 +19,13 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <stdio.h>
+#include <string.h>
 #endif
 
 #ifdef linux
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #endif
 
 const int MAX_SIZE = 100;
@@ -44,12 +46,15 @@ int main(int argc, char **argv){
 	FILE *fp_output;
 	int offset = 0;
 	char *input_string; 
-	input_string = (char*)calloc(21, sizeof(char));
+	input_string = (char*)malloc(20 * sizeof(char));
 	if(input_string == NULL){
-		printf("Failed to calloc memory\n");
+		printf("Failed to malloc memory\n");
 		exit(11);
-	}	
+	}
+	strcpy(input_string, argv[2]);
+	printf("()input_string = %s\n", input_string);
 
+	/* open the files */
 	fp_input = fopen(argv[1], "rb");
 	if(fp_input == NULL){
 		printf("Error file not found: %s\n", argv[1]);
@@ -62,6 +67,7 @@ int main(int argc, char **argv){
 		exit(30);
 	}	
 
+/* find the file size */
 #ifdef linux 
 	fseek(fp_input, 0, SEEK_END);
 	act_size = ftell(fp_input);
@@ -72,8 +78,8 @@ int main(int argc, char **argv){
 #ifdef _WIN32
 	act_size = GetFileSizeEx(fp_input, NULL);
 #endif
-	//output_file(fp_output, fp_input);/* output the file to fp_output */
-	
+
+/* write to the output file */	
 	int ret_in = 1;
 	int ret_out = 0;
 	char buffer[1];
@@ -122,10 +128,11 @@ int count_of_strings(FILE *fp_input, char *input_string){
 		long int spot_in_memory = ftell(fp_input); /* save spot in memory in case goes into bring_in_and_cmp call */
 
 		for(i = 0; i < MAX_SIZE; i++){
-			if(buffer[i] == (input_string[0] & 0xff)){
-				printf("%d == %d at %d\n", buffer[i], input_string[i], i);
-		
-		//count += bring_in_and_cmp(input_string, spot_in_memory, ((loop*MAX_SIZE) + i), fp_input, string_len);
+//printf("input_string[0] = %c = %d\tinput_string[0] & 0xff = %c = %d\n", input_string[0], input_string[0], input_string[0]&0xff, input_string[0]&0xff);
+
+			if((buffer[i] != 0) && (buffer[i] == (input_string[0] & 0xff))){
+		//printf("+++%d == %d at %d\n", buffer[i], input_string[i], i);
+				count += bring_in_and_cmp(input_string, spot_in_memory, ((loop*MAX_SIZE) + i), fp_input, string_len);
 				/* hold current position but get the next string_len characters starting from i */
 			}
 		}
@@ -151,12 +158,12 @@ int bring_in_and_cmp(char *input_string, long int ebp, int first_letter, FILE *f
 	}
 
 	fread(buffer, 1, 20, fp_input);
-	printf("--- buffer[0] = %d\n", buffer[0]); 
+	//printf("--- buffer[0] = %d\n", buffer[0]); 
 	
 	for(i = 0; i < string_len && rax == 1; i++){
 		if(buffer[i] != (0xff & input_string[i])){
 			rax = 0;
-			printf("Failed here when i = %d\n");
+			//printf("Failed here when i = %d\n", i);
 		}
 	}
 	fseek(fp_input, ebp, SEEK_SET); /* return program to where it was */
