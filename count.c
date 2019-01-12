@@ -26,37 +26,144 @@
 #include <stdlib.h>
 #endif
 
+const int MAX_SIZE = 100;
+
+int total_strings(FILE *fp_input, char *input_string);
+
+int bring_in_and_cmp(char *input_string, long int ebp, int first_letter, FILE *fp_input, int string_len);
+
 /* FIXME MUST BE CROSS PLATFORM */
 int main(int argc, char **argv){
 	if(argc != 4){ 
-		printf("Error, too many command line args, must be ./count <input_file> <string> <output_file>\n");
+		printf("Error, must be ./count <input_file> <string> <output_file>\n");
 		exit(10);
 	}
-	int offset = 0;
-	size_t size;
-	FILE *fp_input, *fp_output;
-
-/*	char output_file[100];
-	char input_string[100];
-
-	memset(input_string, '\0', 100);
-	memset(output_file, '\0', 100);
-
-	strcpy(input_string, argv[2]);
-	strcpy(output_file, argv[3]);
-*/
 	
+	size_t act_size;
+	FILE *fp_input;
+	FILE *fp_output;
+	int offset = 0;
+	char *input_string; 
+	input_string = (char*)calloc(21, sizeof(char));
+	if(input_string == NULL){
+		printf("Failed to calloc memory\n");
+		exit(11);
+	}	
 
-	fp_input = fopen(argv[1], "r");
+	fp_input = fopen(argv[1], "rb");
 	if(fp_input == NULL){
 		printf("Error file not found: %s\n", argv[1]);
 		exit(20);
 	}
 	
-	
+	fp_output = fopen(argv[3], "wb");
+	if(fp_output == NULL){
+		printf("Error output file failed: %s\n", argv[3]);
+		exit(30);
+	}	
 
-	
+#ifdef linux 
+	fseek(fp_input, 0, SEEK_END);
+	act_size = ftell(fp_input);
+	rewind(fp_input);
+	printf("Size of the file is %i bytes\n", act_size);
+#endif
 
+#ifdef _WIN32
+	act_size = GetFileSizeEx(fp_input, NULL);
+#endif
+	//output_file(fp_output, fp_input);/* output the file to fp_output */
+	
+	int ret_in = 1;
+	int ret_out = 0;
+	char buffer[1];
+	ret_in = fread(buffer, 1, 1, fp_input);
+	while(ret_in == 1){
+		ret_out = fwrite(buffer, 1, 1, fp_output);
+		ret_in = fread(buffer, 1, 1, fp_input);
+	}
+
+	/* count the number of times the string shows up */	
+	
+	int total_strings = count_of_strings(fp_input, input_string);
+	printf("%i strings of %s were found in %s\n", total_strings, input_string, argv[1]);
+
+	free(input_string);
 	fclose(fp_input);
+	fclose(fp_output);
 return 0;
+} 
+
+
+int count_of_strings(FILE *fp_input, char *input_string){
+	int count = 0;
+	int offset_inside = 0, ret_fread = 0, loop = 0;
+	char *buffer, *temp;
+	int string_len = 1; /* start at 1 b/c '\0' needs a spot */
+	
+	for(string_len = 0; input_string[string_len] != '\0'; string_len++);
+
+	buffer = (char*)calloc((MAX_SIZE), sizeof(char));
+	if(buffer == NULL){
+		printf("Failed to calloc memory\n");
+		exit(40);
+	}
+	/*
+	temp = (char*)calloc(string_len, sizeof(char));
+	if(temp == NULL){
+		printf("Failed to calloc memory\n");
+		exit(50);
+	}*/
+
+	rewind(fp_input);
+	while((ret_fread = fread(buffer, 1, MAX_SIZE, fp_input)) != 0){
+		//printf("### buffer = %s\n", buffer);
+		int i;
+		long int spot_in_memory = ftell(fp_input); /* save spot in memory in case goes into bring_in_and_cmp call */
+
+		for(i = 0; i < MAX_SIZE; i++){
+			if(buffer[i] == (input_string[0] & 0xff)){
+				printf("%d == %d at %d\n", buffer[i], input_string[i], i);
+		
+		//count += bring_in_and_cmp(input_string, spot_in_memory, ((loop*MAX_SIZE) + i), fp_input, string_len);
+				/* hold current position but get the next string_len characters starting from i */
+			}
+		}
+		loop++; /* used to calculate offset */
+	}
+
+	free(buffer);
+	//free(temp);
+
+return count;
 }
+
+int bring_in_and_cmp(char *input_string, long int ebp, int first_letter, FILE *fp_input, int string_len){
+	int rax = 1; /* returns 1 if match, 0 if not */
+	char *buffer;
+	int i;
+	
+	fseek(fp_input, first_letter, SEEK_SET); /* go to the first letter that matched */ 
+	buffer = (char*)calloc((20), sizeof(char));
+	if(buffer == NULL){
+		printf("Failed to calloc memory\n");
+		exit(60);
+	}
+
+	fread(buffer, 1, 20, fp_input);
+	printf("--- buffer[0] = %d\n", buffer[0]); 
+	
+	for(i = 0; i < string_len && rax == 1; i++){
+		if(buffer[i] != (0xff & input_string[i])){
+			rax = 0;
+			printf("Failed here when i = %d\n");
+		}
+	}
+	fseek(fp_input, ebp, SEEK_SET); /* return program to where it was */
+
+	free(buffer);
+return rax;
+}
+
+
+
