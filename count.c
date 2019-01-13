@@ -103,14 +103,15 @@ return 0;
 
 /* loops through the file and looking for matches of the string
  * returns the total number of matching strings found 
- * FIXME currenlty does not work for spaces
+
  */
 int count_of_strings(FILE *fp_input, char *input_string){
 	int count = 0;
 	int offset_inside = 0, ret_fread = 0, loop = 0;
 	char *buffer, *temp;
 	int string_len = 1; /* start at 1 b/c '\0' needs a spot */
-	
+
+	/* find lenght of the string */	
 	for(string_len = 0; input_string[string_len] != '\0'; string_len++);
 
 	buffer = (char*)calloc((MAX_SIZE), sizeof(char));
@@ -126,14 +127,16 @@ int count_of_strings(FILE *fp_input, char *input_string){
 	}*/
 
 	rewind(fp_input);
+/* read through the entire file until there is nothing left to read */
 	while((ret_fread = fread(buffer, 1, MAX_SIZE, fp_input)) != 0){
 //printf("### buffer = %s\n", buffer);
 		int i;
 		long int spot_in_memory = ftell(fp_input); /* save spot in memory in case goes into bring_in_and_cmp call */
-
+		/* look through each byte in the chunk extracted to memory */
 		for(i = 0; i < MAX_SIZE; i++){
 //printf("input_string[0] = %c = %d\tinput_string[0] & 0xff = %c = %d\n", input_string[0], input_string[0], input_string[0]&0xff, input_string[0]&0xff);
-
+			
+			/* if a byte matches the first byte of the string */
 			if((buffer[i] != 0) && (buffer[i] == (input_string[0] & 0xff))){
 		//printf("+++%d == %d at %d\n", buffer[i], input_string[i], i);
 				count += bring_in_and_cmp(input_string, spot_in_memory, ((loop*MAX_SIZE) + i), fp_input, string_len);
@@ -149,6 +152,11 @@ int count_of_strings(FILE *fp_input, char *input_string){
 return count;
 }
 
+/*
+ * Brings the first letter matched plus the len of the string into memory from the file
+ * This way its easier to go through byte by byte to determine if the strings match
+ * Returns 1 if match, 0 if no match
+ */
 int bring_in_and_cmp(char *input_string, long int ebp, int first_letter, FILE *fp_input, int string_len){
 	int rax = 1; /* returns 1 if match, 0 if not */
 	char *buffer;
@@ -161,12 +169,13 @@ int bring_in_and_cmp(char *input_string, long int ebp, int first_letter, FILE *f
 		exit(60);
 	}
 
-	fread(buffer, 1, 20, fp_input);
+	fread(buffer, 1, 20, fp_input); /* bring next 20 bytes into memory */
 	//printf("--- buffer[0] = %d\n", buffer[0]); 
-	
+
+	/* goes thorugh byte by byte */	
 	for(i = 0; i < string_len && rax == 1; i++){
 		if(buffer[i] != (0xff & input_string[i])){
-			rax = 0;
+			rax = 0; /* if not found, set to 0, which will exit loop */
 			//printf("Failed here when i = %d\n", i);
 		}
 	}
