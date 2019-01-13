@@ -52,7 +52,7 @@ int main(int argc, char **argv){
 		exit(11);
 	}
 	strcpy(input_string, argv[2]);
-	printf("()input_string = %s\n", input_string);
+	//printf("()input_string = %s\n", input_string);
 
 	/* open the files */
 	fp_input = fopen(argv[1], "rb");
@@ -92,7 +92,8 @@ int main(int argc, char **argv){
 	/* count the number of times the string shows up */	
 	
 	int total_strings = count_of_strings(fp_input, input_string);
-	printf("%i strings of %s were found in %s\n", total_strings, input_string, argv[1]);
+	printf("Number of matches = %d\n", total_strings);
+	//printf("%i strings of %s were found in %s\n", total_strings, input_string, argv[1]);
 
 	free(input_string);
 	fclose(fp_input);
@@ -100,7 +101,10 @@ int main(int argc, char **argv){
 return 0;
 } 
 
-
+/* loops through the file and looking for matches of the string
+ * returns the total number of matching strings found 
+ * FIXME currenlty does not work for spaces
+ */
 int count_of_strings(FILE *fp_input, char *input_string){
 	int count = 0;
 	int offset_inside = 0, ret_fread = 0, loop = 0;
@@ -123,7 +127,7 @@ int count_of_strings(FILE *fp_input, char *input_string){
 
 	rewind(fp_input);
 	while((ret_fread = fread(buffer, 1, MAX_SIZE, fp_input)) != 0){
-		//printf("### buffer = %s\n", buffer);
+//printf("### buffer = %s\n", buffer);
 		int i;
 		long int spot_in_memory = ftell(fp_input); /* save spot in memory in case goes into bring_in_and_cmp call */
 
