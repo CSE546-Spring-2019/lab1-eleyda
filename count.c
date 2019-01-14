@@ -16,11 +16,12 @@
 			- if start start of string is found, check (len - 1) to see if the rest is a match (keep track of where the start is for the size
 
 */
-#ifdef _WIN32
+
 #include <windows.h>
 #include <stdio.h>
+
 #include <string.h>
-#endif
+#include <stdlib.h>
 
 #ifdef linux
 #include <stdio.h>
@@ -30,7 +31,7 @@
 
 const int MAX_SIZE = 100;
 
-int total_strings(FILE *fp_input, char *input_string);
+int count_of_strings(FILE *fp_input, char *input_string);
 
 int bring_in_and_cmp(char *input_string, long int ebp, int first_letter, FILE *fp_input, int string_len);
 
