@@ -16,8 +16,9 @@
 			- if start start of string is found, check (len - 1) to see if the rest is a match (keep track of where the start is for the size
 
 */
-
+#ifdef __WIN32
 #include <windows.h>
+#endif
 #include <stdio.h>
 
 #include <string.h>
