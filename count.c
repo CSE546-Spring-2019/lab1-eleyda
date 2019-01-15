@@ -74,7 +74,7 @@ int main(int argc, char **argv){
 	fseek(fp_input, 0, SEEK_END);
 	act_size = ftell(fp_input);
 	rewind(fp_input);
-	printf("Size of the file is %i bytes\n", act_size);
+	printf("Size of the file is %zu bytes\n", act_size);
 #endif
 
 #ifdef _WIN32
